@@ -47,7 +47,7 @@ func (geofence *Geofence) setExclusionTiles(vertices []*geo.Point, inclusive boo
 				} else {
 					geofence.tiles[tileHash] = "o"
 				}
-			} // else all points are outside the poly
+			} // else all points are outside the polygon
 		}
 	}
 }

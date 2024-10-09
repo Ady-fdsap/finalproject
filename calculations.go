@@ -102,3 +102,35 @@ func vectorDifference(p1 *geo.Point, p2 *geo.Point) *geo.Point {
 func vectorCrossProduct(p1 *geo.Point, p2 *geo.Point) float64 {
 	return p1.Lat()*p2.Lng() - p1.Lng()*p2.Lat()
 }
+
+func (geofence *Geofence) Inside(point *geo.Point) bool {
+	// Bbox check first
+	if point.Lat() < geofence.minX || point.Lat() > geofence.maxX || point.Lng() < geofence.minY || point.Lng() > geofence.maxY {
+		return false
+	}
+
+	tileHash := (project(point.Lng(), geofence.tileHeight)-geofence.minTileY)*float64(geofence.granularity) + (project(point.Lat(), geofence.tileWidth) - geofence.minTileX)
+	intersects := geofence.tiles[tileHash]
+
+	if intersects == "i" {
+		return true
+	} else if intersects == "x" {
+		polygon := geo.NewPolygon(geofence.vertices)
+		inside := polygon.Contains(point)
+		if !inside || len(geofence.holes) == 0 {
+			return inside
+		}
+
+		// if we hanve holes cut out, and the point falls within the outer ring,
+		// ensure no inner rings exclude this point
+		for i := 0; i < len(geofence.holes); i++ {
+			holePoly := geo.NewPolygon(geofence.holes[i])
+			if holePoly.Contains(point) {
+				return false
+			}
+		}
+		return true
+	} else {
+		return false
+	}
+}
