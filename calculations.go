@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 
 	geo "github.com/kellydunn/golang-geo"
@@ -106,18 +107,24 @@ func vectorCrossProduct(p1 *geo.Point, p2 *geo.Point) float64 {
 func (geofence *Geofence) Inside(point *geo.Point) bool {
 	// Bbox check first
 	if point.Lat() < geofence.minX || point.Lat() > geofence.maxX || point.Lng() < geofence.minY || point.Lng() > geofence.maxY {
+		//fmt.Println("Point is outside bounding box")
 		return false
 	}
 
 	tileHash := (project(point.Lng(), geofence.tileHeight)-geofence.minTileY)*float64(geofence.granularity) + (project(point.Lat(), geofence.tileWidth) - geofence.minTileX)
+	//fmt.Println("Tile hash:", tileHash)
 	intersects := geofence.tiles[tileHash]
+	//fmt.Println("Intersects:", intersects)
 
 	if intersects == "i" {
+		//fmt.Println("Point is inside tile")
 		return true
 	} else if intersects == "x" {
+		fmt.Println("Point is in tile with exclusion")
 		polygon := geo.NewPolygon(geofence.vertices)
 		inside := polygon.Contains(point)
 		if !inside || len(geofence.holes) == 0 {
+			fmt.Println("Point is not inside polygon")
 			return inside
 		}
 
