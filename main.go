@@ -2,8 +2,11 @@ package main
 
 import (
 	//"testing"
+	// "encoding/json"
+	// "net/http"
 	"fmt"
 
+	// "github.com/gorilla/mux"
 	geo "github.com/kellydunn/golang-geo"
 )
 
@@ -17,7 +20,6 @@ func NewGeofence(points [][]*geo.Point, args ...interface{}) *Geofence {
 			geo.NewPoint(14.06788253996273, 121.32688224303081),
 		},
 	}
-
 	geofence := &Geofence{}
 	geofence.tiles = make(map[float64]string)
 	if len(args) > 0 {
@@ -35,6 +37,8 @@ func NewGeofence(points [][]*geo.Point, args ...interface{}) *Geofence {
 }
 
 func main() {
+	go StartAPI()
+	fmt.Println("API up and running :) ")
 	fmt.Print("Enter latitude: ")
 	var lat float64
 	fmt.Scanln(&lat)
