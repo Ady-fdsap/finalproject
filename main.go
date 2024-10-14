@@ -1,12 +1,7 @@
 package main
 
 import (
-	//"testing"
-	// "encoding/json"
-	// "net/http"
 	"fmt"
-
-	// "github.com/gorilla/mux"
 	geo "github.com/kellydunn/golang-geo"
 )
 
