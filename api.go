@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -25,6 +26,8 @@ var points = [][]*geo.Point{
 
 // Define the handleGeofenceCheck function
 func (api *API) handleGeofenceCheck(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("Received %s request from %s to %s?%s\n", r.Method, r.RemoteAddr, r.URL.Path, r.URL.Query())
+
 	lat := r.URL.Query().Get("lat")
 	lng := r.URL.Query().Get("lng")
 
