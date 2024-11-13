@@ -7,6 +7,8 @@ import (
 	geo "github.com/kellydunn/golang-geo"
 )
 
+//calculations lang para sa tiles and stuff for the geofence
+
 func getMin(slice []float64) float64 {
 	var min float64
 	if len(slice) > 0 {
