@@ -69,7 +69,7 @@ func Logger(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		timestamp := time.Now().In(phTimezone)
-		timestampStr := timestamp.Format("2006-01-02T15:04:05-07:00")
+		timestampStr := timestamp.Format("2006-01-02,15:04:05-07:00")
 		log.Println(timestampStr)
 
 		logEntry = RequestLog{
