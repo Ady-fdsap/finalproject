@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"log"
 	"net/http"
 	"strconv"
@@ -31,12 +32,14 @@ func initDB() {
 	log.Println("Database connection established")
 	_, err = db.Exec(`
         CREATE TABLE IF NOT EXISTS logs (
-            id SERIAL PRIMARY KEY,
-            timestamp TIMESTAMP NOT NULL,
-            method VARCHAR(10) NOT NULL,
-            latitude FLOAT NOT NULL,
-            longitude FLOAT NOT NULL
-        );
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP NOT NULL,
+    method VARCHAR(10) NOT NULL,
+    latitude FLOAT NOT NULL,
+    longitude FLOAT NOT NULL,
+    response TEXT NOT NULL
+);
+
     `)
 	if err != nil {
 		log.Fatal(err)
@@ -47,6 +50,9 @@ func initDB() {
 
 func Logger(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Create a custom response writer that captures the response body
+		captureWriter := &responseCaptureWriter{ResponseWriter: w, body: &bytes.Buffer{}}
+
 		if r.Method == "GET" || r.Method == "POST" || r.Method == "PATCH" || r.Method == "DELETE" {
 			// Log the request
 			lat := r.URL.Query().Get("lat")
@@ -71,16 +77,30 @@ func Logger(next http.HandlerFunc) http.HandlerFunc {
 				Longitude: lngFloat,
 			}
 
+			// Call the next handler with the custom response writer
+			next(captureWriter, r)
+
+			// Log the response
+			responseBody := captureWriter.body.String()
+
 			// Insert the log entry into the database
 			_, err = db.Exec(`
-                INSERT INTO logs (timestamp, method, latitude, longitude)
-                VALUES ($1, $2, $3, $4);
-            `, logEntry.Timestamp, logEntry.Method, logEntry.Latitude, logEntry.Longitude)
+                INSERT INTO logs (timestamp, method, latitude, longitude, response)
+                VALUES ($1, $2, $3, $4, $5);
+            `, logEntry.Timestamp, logEntry.Method, logEntry.Latitude, logEntry.Longitude, responseBody)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
-
-		next(w, r)
 	}
+}
+
+type responseCaptureWriter struct {
+	http.ResponseWriter
+	body *bytes.Buffer
+}
+
+func (w *responseCaptureWriter) Write(b []byte) (int, error) {
+	w.body.Write(b)
+	return w.ResponseWriter.Write(b)
 }
