@@ -99,6 +99,6 @@ func handleGeofenceCheckRequest(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	fmt.Println("API up and running :) ")
-	http.HandleFunc("/geofence/check", Logger(handleGeofenceCheckRequest))
+	http.HandleFunc("/geofence/check", corsMiddleware(Logger(handleGeofenceCheckRequest)))
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

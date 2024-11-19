@@ -1,12 +1,13 @@
 package main
 
 import (
-	"encoding/json"
+	"database/sql"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 type RequestLog struct {
@@ -41,44 +42,45 @@ func Logger(next http.HandlerFunc) http.HandlerFunc {
 			Longitude: lngFloat,
 		}
 
-		// Marshal log entry to JSON
-		jsonLog, err := json.Marshal(logEntry)
+		// Connect to the PostgreSQL database
+		db, err := sql.Open("postgres", "user=ady dbname=Requests sslmode=disable")
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer db.Close()
+		log.Println("Database connection established")
+
+		// Create the logs table if it doesn't exist
+		_, err = db.Exec(`
+		CREATE TABLE logs (
+			id SERIAL PRIMARY KEY,
+			timestamp TIMESTAMP NOT NULL,
+			method VARCHAR(10) NOT NULL,
+			latitude FLOAT NOT NULL,
+			longitude FLOAT NOT NULL
+		);
+	`)
+		if err != nil {
+			if err.Error() == "pq: relation \"logs\" already exists" {
+				log.Println("Logs table already exists")
+			} else {
+				log.Println(err)
+				return
+			}
+		}
+
+		// Insert the log entry into the database
+		_, err = db.Exec(`
+			INSERT INTO logs (timestamp, method, latitude, longitude)
+			VALUES ($1, $2, $3, $4);
+		`, logEntry.Timestamp, logEntry.Method, logEntry.Latitude, logEntry.Longitude)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 
-		// Write log entry to file
-		logFile, err := os.OpenFile("./requests.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		defer logFile.Close()
-
-		_, err = logFile.Write(append(jsonLog, '\n'))
-		if err != nil {
-			log.Println(err)
-			return
-
-		}
-		phTimezone, err := time.LoadLocation("Asia/Manila")
-		if err != nil {
-			log.Println(err)
-			return
-		}
-
-		timestamp := time.Now().In(phTimezone)
-		timestampStr := timestamp.Format("2006-01-02,15:04:05-07:00")
-		log.Println(timestampStr)
-
-		logEntry = RequestLog{
-			Timestamp: timestamp,
-			Method:    r.Method,
-			Latitude:  latFloat,
-			Longitude: lngFloat,
-		}
-		// Call next handler
+		// Call the next handler in the chain
 		next(w, r)
 	}
 }
