@@ -52,9 +52,10 @@ func initDB() {
 
 	_, err = db.Exec(`
     CREATE TABLE IF NOT EXISTS employees (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(50) NOT NULL,
-        join_date DATE NOT NULL,
+        id VARCHAR(15) PRIMARY KEY UNIQUE,
+        first_name VARCHAR(50) NOT NULL,
+		last_name VARCHAR(50) NOT NULL,
+        date_added DATE NOT NULL,
         password VARCHAR(255) NOT NULL
     );
 `)
