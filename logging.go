@@ -46,6 +46,21 @@ func initDB() {
 	}
 	log.Println("Logs table created")
 	log.Println("Listening for requests...")
+
+	_, err = db.Exec(`
+    CREATE TABLE IF NOT EXISTS employees (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(50) NOT NULL,
+        join_date DATE NOT NULL,
+        password VARCHAR(255) NOT NULL
+    );
+`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("Employees table created")
+
 }
 
 func Logger(next http.HandlerFunc) http.HandlerFunc {
