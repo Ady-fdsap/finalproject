@@ -17,6 +17,7 @@ type RequestLog struct {
 	Method    string    `json:"method"`
 	Latitude  float64   `json:"latitude"`
 	Longitude float64   `json:"longitude"`
+	IPAddress string    `json:"ip_address"`
 }
 
 func initDB() {
@@ -37,8 +38,10 @@ func initDB() {
     method VARCHAR(10) NOT NULL,
     latitude FLOAT NOT NULL,
     longitude FLOAT NOT NULL,
+    ip_address VARCHAR(255) NOT NULL,
     response TEXT NOT NULL
 );
+
 
     `)
 	if err != nil {
@@ -65,6 +68,12 @@ func initDB() {
 
 func Logger(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Get the IP address of the request
+		ipAddress := r.Header.Get("X-Forwarded-For")
+		if ipAddress == "" {
+			ipAddress = r.RemoteAddr
+		}
+
 		// Create a custom response writer that captures the response body
 		captureWriter := &responseCaptureWriter{ResponseWriter: w, body: &bytes.Buffer{}}
 
@@ -90,6 +99,7 @@ func Logger(next http.HandlerFunc) http.HandlerFunc {
 				Method:    r.Method,
 				Latitude:  latFloat,
 				Longitude: lngFloat,
+				IPAddress: ipAddress, // Add the IP address to the log entry
 			}
 
 			// Call the next handler with the custom response writer
@@ -100,9 +110,9 @@ func Logger(next http.HandlerFunc) http.HandlerFunc {
 
 			// Insert the log entry into the database
 			_, err = db.Exec(`
-                INSERT INTO logs (timestamp, method, latitude, longitude, response)
-                VALUES ($1, $2, $3, $4, $5);
-            `, logEntry.Timestamp, logEntry.Method, logEntry.Latitude, logEntry.Longitude, responseBody)
+                INSERT INTO logs (timestamp, method, latitude, longitude, ip_address, response)
+                VALUES ($1, $2, $3, $4, $5, $6);
+            `, logEntry.Timestamp, logEntry.Method, logEntry.Latitude, logEntry.Longitude, logEntry.IPAddress, responseBody)
 			if err != nil {
 				log.Fatal(err)
 			}
