@@ -82,6 +82,8 @@ var db *sql.DB
 func main() {
 	log.Println("API up and running :) ")
 	initDB()
+	go menu()
 	http.HandleFunc("/geofence/check", corsMiddleware(Logger(handleGeofenceCheckRequest)))
 	log.Fatal(http.ListenAndServe(":8080", nil))
+
 }
