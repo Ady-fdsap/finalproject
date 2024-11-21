@@ -12,7 +12,8 @@ func menu() {
 		fmt.Println("Select an option:")
 		fmt.Println("1. Register Employee")
 		fmt.Println("2. Delete Employee")
-		fmt.Println("3. Exit")
+		fmt.Println("3. Display Employees")
+		fmt.Println("4. Exit")
 		var choice int
 		fmt.Scanln(&choice)
 		switch choice {
@@ -27,6 +28,14 @@ func menu() {
 			break
 
 		case 3:
+			err := displayEmployees(db)
+			if err != nil {
+				fmt.Println(err)
+				log.Println(err)
+			}
+			break
+
+		case 4:
 			fmt.Println("Exiting program")
 			os.Exit(0)
 
