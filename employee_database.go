@@ -28,9 +28,9 @@ func registerEmployee(db *sql.DB) error {
 	fmt.Scanln(&password)
 
 	_, err := db.Exec(`
-		INSERT INTO employees (id, first_name, last_name, date_added, password)
-		VALUES ($1, $2, $3, CURRENT_DATE, $4);
-	`, id, firstName, lastName, password)
+        INSERT INTO employees (id, first_name, last_name, date_added, password)
+        VALUES ($1, $2, $3, CURRENT_DATE, $4);
+    `, id, firstName, lastName, password)
 
 	if err != nil {
 		return fmt.Errorf("failed to register employee: %v", err)
