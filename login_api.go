@@ -13,8 +13,8 @@ func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("Received login request with ID:", r.URL.Query().Get("id"))
-	log.Println("Received login request with password:", r.URL.Query().Get("password"))
+	log.Println("[LOGIN] Received login request with ID:", r.URL.Query().Get("id"))
+	log.Println("[LOGIN]: Received login request with password:", r.URL.Query().Get("password"))
 
 	employeeID := r.URL.Query().Get("id")
 	password := r.URL.Query().Get("password")
@@ -27,20 +27,20 @@ func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
         WHERE id = $1;
     `, employeeID).Scan(&storedPassword)
 
-	log.Println("Stored password from database:", storedPassword)
+	log.Println("[DEBUG] Stored password from database:", storedPassword)
 
 	if err != nil {
-		log.Println("Error querying database:", err)
-		http.Error(w, "Failed to query database", http.StatusInternalServerError)
+		log.Println("[LOGIN] Error querying database:", err)
+		http.Error(w, "[LOGIN] Failed to query database", http.StatusInternalServerError)
 		return
 	}
 
 	// Compare the provided password with the stored password
 	if password == storedPassword {
-		log.Println("Login successful!")
+		log.Println("[LOGIN] Login successful!")
 		w.Write([]byte("true"))
 	} else {
-		log.Println("Invalid password")
+		log.Println("[LOGIN] Invalid password")
 		w.Write([]byte("false"))
 	}
 }
