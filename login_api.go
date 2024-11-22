@@ -1,23 +1,32 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	_ "github.com/lib/pq"
 )
 
 func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodOptions {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	log.Println("[LOGIN] Received login request with ID:", r.URL.Query().Get("id"))
-	log.Println("[LOGIN]: Received login request with password:", r.URL.Query().Get("password"))
-
 	employeeID := r.URL.Query().Get("id")
 	password := r.URL.Query().Get("password")
+
+	if employeeID == "" || password == "" {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
 
 	// Query the database to check if the employee ID and password match
 	var storedPassword string
@@ -27,20 +36,15 @@ func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
         WHERE id = $1;
     `, employeeID).Scan(&storedPassword)
 
-	log.Println("[DEBUG] Stored password from database:", storedPassword)
-
 	if err != nil {
-		log.Println("[LOGIN] Error querying database:", err)
-		http.Error(w, "[LOGIN] Failed to query database", http.StatusInternalServerError)
+		http.Error(w, "false", http.StatusUnauthorized)
 		return
 	}
 
 	// Compare the provided password with the stored password
 	if password == storedPassword {
-		log.Println("[LOGIN] Login successful!")
 		w.Write([]byte("true"))
 	} else {
-		log.Println("[LOGIN] Invalid password")
-		w.Write([]byte("false"))
+		http.Error(w, "false", http.StatusUnauthorized)
 	}
 }
