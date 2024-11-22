@@ -67,7 +67,7 @@ func (api *API) handleGeofenceCheck(w http.ResponseWriter, r *http.Request) {
 // Define the corsMiddleware function
 func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("DEBUG: Cors middleware called")
+		log.Println("[DEBUG] Cors middleware called")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
