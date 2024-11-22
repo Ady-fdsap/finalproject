@@ -25,7 +25,6 @@ func menu() {
 				fmt.Println(err)
 				log.Println(err)
 			}
-			break
 
 		case 3:
 			err := displayEmployees(db)
@@ -33,7 +32,6 @@ func menu() {
 				fmt.Println(err)
 				log.Println(err)
 			}
-			break
 
 		case 4:
 			fmt.Println("Exiting program")
