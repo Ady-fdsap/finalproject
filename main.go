@@ -45,15 +45,13 @@ func NewGeofence(points [][]*geo.Point, args ...interface{}) *Geofence {
 
 var db *sql.DB
 
-
-
 func main() {
 	log.Println("API up and running :) ")
 	initDB()
 	api := &API{database: db}
 	go menu()
 	http.HandleFunc("/geofence/check", corsMiddleware(Logger(handleGeofenceCheckRequest)))
-	http.HandleFunc("/employee/login", api.handleEmployeeLogin)
+	http.HandleFunc("/employee/login", corsMiddleware(api.handleEmployeeLogin))
 	log.Fatal(http.ListenAndServe(":8080", nil))
 
 }
