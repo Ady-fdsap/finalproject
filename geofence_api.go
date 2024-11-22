@@ -31,9 +31,9 @@ var points = [][]*geo.Point{
 // Define the handleGeofenceCheck function
 func (api *API) handleGeofenceCheck(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-        return
-    }
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
 	fmt.Printf("Received %s request from %s to %s?%s\n", r.Method, r.RemoteAddr, r.URL.Path, r.URL.Query())
 
@@ -64,11 +64,14 @@ func (api *API) handleGeofenceCheck(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Define the corsMiddleware function
 func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("DEBUG: Cors middleware called")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
 		next(w, r)
 	}
