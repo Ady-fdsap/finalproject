@@ -47,7 +47,7 @@ func initDB() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("[DB] Logs table created")
+	log.Println("[DB] Logs table initialized")
 	log.Println("[DB] Listening for requests...")
 
 	_, err = db.Exec(`
@@ -63,7 +63,22 @@ func initDB() {
 		log.Fatal(err)
 	}
 
-	log.Println("[DB] Employees table created")
+	log.Println("[DB] Employees table initialized")
+
+	_, err = db.Exec(`
+    CREATE TABLE IF NOT EXISTS login_attempts (
+        id SERIAL PRIMARY KEY,
+        timestamp TIMESTAMP NOT NULL,
+        ip_address VARCHAR(255) NOT NULL,
+        employee_id VARCHAR(15) NOT NULL,
+        success BOOLEAN NOT NULL
+    );
+`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("[DB] Login attempts table initialized")
 
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -44,6 +45,7 @@ func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Error(w, "false", http.StatusUnauthorized)
+		log.Println("Failed login attempt from", ipAddress)
 		return
 	}
 
@@ -55,4 +57,22 @@ func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
 		log.Println("Failed login attempt from", ipAddress)
 		http.Error(w, "false", http.StatusUnauthorized)
 	}
+
+	logEntry := RequestLog{
+		Timestamp: time.Now(),
+		Method:    r.Method,
+		Latitude:  0, // Not applicable for login attempts
+		Longitude: 0, // Not applicable for login attempts
+		IPAddress: ipAddress,
+	}
+
+	_, err = db.Exec(`
+    INSERT INTO login_attempts (timestamp, ip_address, employee_id, success)
+    VALUES ($1, $2, $3, $4);
+`, logEntry.Timestamp, logEntry.IPAddress, employeeID, password == storedPassword)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 }
