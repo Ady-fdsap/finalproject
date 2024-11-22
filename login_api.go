@@ -38,14 +38,22 @@ func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
 	// Query the database to check if the employee ID and password match
 	var storedPassword string
 	err := db.QueryRow(`
-        SELECT password
-        FROM employees
-        WHERE id = $1;
-    `, employeeID).Scan(&storedPassword)
+    SELECT password
+    FROM employees
+    WHERE id = $1;
+`, employeeID).Scan(&storedPassword)
 
 	if err != nil {
 		http.Error(w, "false", http.StatusUnauthorized)
 		log.Println("Failed login attempt from", ipAddress)
+		// Log the failed login attempt
+		_, err = db.Exec(`
+    INSERT INTO login_attempts (timestamp, ip_address, employee_id, success)
+    VALUES ($1, $2, $3, $4);
+`, time.Now(), ipAddress, employeeID, false)
+		if err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -53,26 +61,24 @@ func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
 	if password == storedPassword {
 		log.Println("Successful login from", ipAddress)
 		w.Write([]byte("true"))
+		// Log the successful login attempt
+		_, err = db.Exec(`
+    INSERT INTO login_attempts (timestamp, ip_address, employee_id, success)
+    VALUES ($1, $2, $3, $4);
+`, time.Now(), ipAddress, employeeID, true)
+		if err != nil {
+			log.Fatal(err)
+		}
 	} else {
 		log.Println("Failed login attempt from", ipAddress)
 		http.Error(w, "false", http.StatusUnauthorized)
-	}
-
-	logEntry := RequestLog{
-		Timestamp: time.Now(),
-		Method:    r.Method,
-		Latitude:  0, // Not applicable for login attempts
-		Longitude: 0, // Not applicable for login attempts
-		IPAddress: ipAddress,
-	}
-
-	_, err = db.Exec(`
+		// Log the failed login attempt
+		_, err = db.Exec(`
     INSERT INTO login_attempts (timestamp, ip_address, employee_id, success)
     VALUES ($1, $2, $3, $4);
-`, logEntry.Timestamp, logEntry.IPAddress, employeeID, password == storedPassword)
-
-	if err != nil {
-		log.Fatal(err)
+`, time.Now(), ipAddress, employeeID, false)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
-
 }
