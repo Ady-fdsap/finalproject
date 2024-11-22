@@ -1,12 +1,18 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	_ "github.com/lib/pq"
 )
 
 func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
+	ipAddress := r.Header.Get("X-Forwarded-For")
+	if ipAddress == "" {
+		ipAddress = r.RemoteAddr
+	}
+
 	if r.Method == http.MethodOptions {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
@@ -43,8 +49,10 @@ func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
 
 	// Compare the provided password with the stored password
 	if password == storedPassword {
+		log.Println("Successful login from", ipAddress)
 		w.Write([]byte("true"))
 	} else {
+		log.Println("Failed login attempt from", ipAddress)
 		http.Error(w, "false", http.StatusUnauthorized)
 	}
 }
