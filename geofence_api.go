@@ -16,18 +16,6 @@ type API struct {
 	database *sql.DB
 }
 
-// Define the geofence points
-var points = [][]*geo.Point{
-	{
-		geo.NewPoint(14.067694194798804, 121.32708640042505),
-		geo.NewPoint(14.06800445535538, 121.32742234709286),
-		geo.NewPoint(14.068129707532552, 121.32719002650704),
-		geo.NewPoint(14.06788253996273, 121.32688224303081),
-	},
-}
-
-// Define the NewGeofence function
-
 // Define the handleGeofenceCheck function
 func (api *API) handleGeofenceCheck(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -56,20 +44,23 @@ func (api *API) handleGeofenceCheck(w http.ResponseWriter, r *http.Request) {
 	point := geo.NewPoint(latFloat, lngFloat)
 
 	// Check if the point is inside the geofence
-	geofence := NewGeofence(points)
+	geofence := NewGeofence()
 	if geofence.Inside(point) {
 		w.Write([]byte("true"))
 	} else {
 		w.Write([]byte("false"))
 	}
+
 }
 
 // Define the corsMiddleware function
 func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("[DEBUG] Cors middleware called")
+		if r.Method != http.MethodOptions {
+			log.Printf("[DEBUG] Request method: %s, URL: %s", r.Method, r.URL)
+		}
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 

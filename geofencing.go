@@ -26,9 +26,6 @@ type Geofence struct {
 	maxTileY    float64
 }
 
-// higher value = more tiles = more accuracy
-const defaultGranularity = 50
-
 func handleGeofenceCheckRequest(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Received %s request from %s to %s?%s\n", r.Method, r.RemoteAddr, r.URL.Path, r.URL.Query())
 	lat := r.URL.Query().Get("lat")
@@ -50,10 +47,11 @@ func handleGeofenceCheckRequest(w http.ResponseWriter, r *http.Request) {
 	point := geo.NewPoint(latFloat, lngFloat)
 
 	// Check if the point is inside the geofence
-	geofence := NewGeofence(points)
+	geofence := NewGeofence()
 	if geofence.Inside(point) {
 		w.Write([]byte("true"))
 	} else {
 		w.Write([]byte("false"))
 	}
+
 }
