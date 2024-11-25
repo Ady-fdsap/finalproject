@@ -71,8 +71,6 @@ func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 // Define the StartAPI function
 func StartAPI() {
 	api := &API{}
-
 	http.HandleFunc("/geofence/check", api.handleGeofenceCheck)
-
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
