@@ -43,6 +43,20 @@ func registerEmployee(db *sql.DB) error {
 		return nil
 	}
 
+	// Check if password meets requirements
+	if len(password) < 8 {
+		fmt.Println("Password must be at least 8 characters long")
+		return registerEmployee(db) // restart registration process
+	}
+	if !hasCapitalLetter(password) {
+		fmt.Println("Password must contain at least one capital letter")
+		return registerEmployee(db) // restart registration process
+	}
+	if !hasNumber(password) {
+		fmt.Println("Password must contain at least one number")
+		return registerEmployee(db) // restart registration process
+	}
+
 	_, err := db.Exec(`
         INSERT INTO employees (id, first_name, last_name, date_added, password)
         VALUES ($1, $2, $3, CURRENT_DATE, $4);
@@ -155,4 +169,22 @@ func displayEmployees(db *sql.DB) error {
 	}
 
 	return nil
+}
+
+func hasCapitalLetter(s string) bool {
+	for _, r := range s {
+		if r >= 'A' && r <= 'Z' {
+			return true
+		}
+	}
+	return false
+}
+
+func hasNumber(s string) bool {
+	for _, r := range s {
+		if r >= '0' && r <= '9' {
+			return true
+		}
+	}
+	return false
 }
