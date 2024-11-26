@@ -54,15 +54,15 @@ func registerEmployee(db *sql.DB) error {
 	// Check if password meets requirements
 	if len(password) < 8 {
 		fmt.Println("Password must be at least 8 characters long")
-		return registerEmployee(db) // restart registration process
+		return registerEmployee(db)
 	}
 	if !hasCapitalLetter(password) {
 		fmt.Println("Password must contain at least one capital letter")
-		return registerEmployee(db) // restart registration process
+		return registerEmployee(db)
 	}
 	if !hasNumber(password) {
 		fmt.Println("Password must contain at least one number")
-		return registerEmployee(db) // restart registration process
+		return registerEmployee(db)
 	}
 
 	_, err := db.Exec(`
