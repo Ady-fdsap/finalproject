@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -10,6 +9,7 @@ import (
 
 // ito ung structure or parang blueprint ng mga factors/variables na ginagamit ng geofence
 type Geofence struct {
+	ID          string
 	vertices    []*geo.Point
 	holes       [][]*geo.Point
 	tiles       map[float64]string
@@ -26,15 +26,34 @@ type Geofence struct {
 	maxTileY    float64
 }
 
-func NewGeofence() *Geofence {
-	points := [][]*geo.Point{
+type GeofenceManager struct {
+	geofences map[string]*Geofence
+}
+
+func (gm *GeofenceManager) GetGeofence(id string) *Geofence {
+	return gm.geofences[id]
+}
+
+var Geofences = map[string]*Geofence{
+	"geofence1": NewGeofence("geofence1", [][]*geo.Point{
 		{
 			geo.NewPoint(14.067694194798804, 121.32708640042505),
 			geo.NewPoint(14.06800445535538, 121.32742234709286),
 			geo.NewPoint(14.068129707532552, 121.32719002650704),
 			geo.NewPoint(14.06788253996273, 121.32688224303081),
 		},
-	}
+	}),
+	//"geofence2": NewGeofence("geofence2", [][]*geo.Point{
+	//	{
+	//		geo.NewPoint(14.067694194798804, 121.32708640042505),
+	//		geo.NewPoint(14.06800445535538, 121.32742234709286),
+	//		geo.NewPoint(14.068129707532552, 121.32719002650704),
+	//		geo.NewPoint(14.06788253996273, 121.32688224303081),
+	//	},
+	//}),
+}
+
+func NewGeofence(id string, points [][]*geo.Point) *Geofence {
 	geofence := &Geofence{}
 	geofence.tiles = make(map[float64]string)
 	geofence.granularity = 50
@@ -46,8 +65,14 @@ func NewGeofence() *Geofence {
 	return geofence
 }
 
+// request wrapper for the handleGeofenceCheck function
+func handleGeofenceCheckRequestWrapper(w http.ResponseWriter, r *http.Request) {
+	gm := &GeofenceManager{} // You need to get the GeofenceManager from somewhere
+	var _ *GeofenceManager = gm
+	handleGeofenceCheckRequest(w, r)
+}
+
 func handleGeofenceCheckRequest(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Received %s request from %s to %s?%s\n", r.Method, r.RemoteAddr, r.URL.Path, r.URL.Query())
 	lat := r.URL.Query().Get("lat")
 	lng := r.URL.Query().Get("lng")
 
@@ -66,12 +91,14 @@ func handleGeofenceCheckRequest(w http.ResponseWriter, r *http.Request) {
 	// Create a new geofence point
 	point := geo.NewPoint(latFloat, lngFloat)
 
-	// Check if the point is inside the geofence
-	geofence := NewGeofence()
-	if geofence.Inside(point) {
-		w.Write([]byte("true"))
-	} else {
-		w.Write([]byte("false"))
+	// Check if the point is inside any geofence
+	for _, geofence := range Geofences {
+		if geofence.Inside(point) {
+			w.Write([]byte("true"))
+			return
+		}
 	}
 
+	// If the point is not inside any geofence, return false
+	w.Write([]byte("false"))
 }

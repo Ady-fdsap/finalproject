@@ -43,7 +43,7 @@ func (api *API) handleGeofenceCheck(w http.ResponseWriter, r *http.Request) {
 	point := geo.NewPoint(latFloat, lngFloat)
 
 	// Check if the point is inside the geofence
-	geofence := NewGeofence()
+	geofence := Geofences["geofence1"]
 	if geofence.Inside(point) {
 		w.Write([]byte("true"))
 	} else {

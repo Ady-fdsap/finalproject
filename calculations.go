@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"math"
 
 	geo "github.com/kellydunn/golang-geo"
@@ -122,24 +122,27 @@ func (geofence *Geofence) Inside(point *geo.Point) bool {
 		//fmt.Println("Point is inside tile")
 		return true
 	} else if intersects == "x" {
-		fmt.Println("Point is in tile with exclusion")
+		//fmt.Println("Point is in tile with exclusion")
 		polygon := geo.NewPolygon(geofence.vertices)
 		inside := polygon.Contains(point)
 		if !inside || len(geofence.holes) == 0 {
-			fmt.Println("Point is not inside polygon")
+			//fmt.Println("Point is not inside polygon")
 			return inside
 		}
 
-		// if we hanve holes cut out, and the point falls within the outer ring,
-		// ensure no inner rings exclude this point
-		for i := 0; i < len(geofence.holes); i++ {
-			holePoly := geo.NewPolygon(geofence.holes[i])
+		// Check if point is inside any of the holes
+		for _, hole := range geofence.holes {
+			holePoly := geo.NewPolygon(hole)
 			if holePoly.Contains(point) {
+				//fmt.Println("Point is inside hole")
 				return false
 			}
 		}
+
+		//fmt.Println("Point is inside geofence")
 		return true
 	} else {
+		//fmt.Println("Point is outside geofence")
 		return false
 	}
 }

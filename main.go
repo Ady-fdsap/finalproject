@@ -11,7 +11,7 @@ var db *sql.DB
 func main() {
 	initDB()
 	api := &API{database: db}
-	http.HandleFunc("/geofence/check", corsMiddleware(Logger(handleGeofenceCheckRequest)))
+	http.HandleFunc("/geofence/check", corsMiddleware(Logger(handleGeofenceCheckRequestWrapper)))
 	http.HandleFunc("/employee/login", corsMiddleware(api.handleEmployeeLogin))
 	log.Println("API up and running :) ")
 	go menu()
