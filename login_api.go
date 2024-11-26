@@ -36,12 +36,17 @@ func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Query the database to check if the employee ID and password match
+	stmt, err := db.Prepare("SELECT password FROM employees WHERE id = $1")
+	if err != nil {
+		http.Error(w, "failed to prepare query", http.StatusInternalServerError)
+		return
+	}
 	var storedPassword string
-	err := db.QueryRow(`
-    SELECT password
-    FROM employees
-    WHERE id = $1;
-`, employeeID).Scan(&storedPassword)
+	err = stmt.QueryRow(employeeID).Scan(&storedPassword)
+	if err != nil {
+		http.Error(w, "failed to retrieve password", http.StatusInternalServerError)
+		return
+	}
 
 	if err != nil {
 		http.Error(w, "false", http.StatusUnauthorized)
