@@ -36,13 +36,14 @@ func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Query the database to check if the employee ID and password match
-	stmt, err := db.Prepare("SELECT password FROM employees WHERE id = $1")
+	stmt, err := db.Prepare("SELECT password, role FROM employees WHERE id = $1")
 	if err != nil {
 		http.Error(w, "failed to prepare query", http.StatusInternalServerError)
 		return
 	}
-	var storedPassword string
-	err = stmt.QueryRow(employeeID).Scan(&storedPassword)
+
+	var storedPassword, role string
+	err = stmt.QueryRow(employeeID).Scan(&storedPassword, &role)
 	if err != nil {
 		http.Error(w, "failed to retrieve password", http.StatusInternalServerError)
 		return
@@ -60,16 +61,18 @@ func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 		return
+	} else {
+		log.Printf("Successful login attempt from %s (employee ID: %s, role: %s)\n", ipAddress, employeeID, role)
+		// Log the successful login attempt
+		_, err = db.Exec(`
+			INSERT INTO login_attempts (timestamp, ip_address, employee_id, success)
+			VALUES ($1, $2, $3, $4);
+		`, time.Now(), ipAddress, employeeID, true)
+		if err != nil {
+			log.Fatal(err)
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(role))
+		return
 	}
-
-	// Login successful, log the successful login attempt
-	_, err = db.Exec(`
-		INSERT INTO login_attempts (timestamp, ip_address, employee_id, success)
-		VALUES ($1, $2, $3, $4);
-	`, time.Now(), ipAddress, employeeID, true)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	w.Write([]byte("true"))
 }
