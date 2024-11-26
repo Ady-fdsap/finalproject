@@ -65,8 +65,6 @@ func registerEmployee(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("failed to register employee: %v", err)
 	}
-
-	fmt.Println("Employee registered successfully")
 	return nil
 }
 
