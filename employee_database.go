@@ -11,7 +11,15 @@ import (
 )
 
 func registerEmployee(db *sql.DB) error {
-	var id, firstName, lastName, password string
+	var id, firstName, lastName, password, role string
+
+	fmt.Print("Enter Role [Admin] [Employee] [Intern] (or 'abort' to cancel): ")
+	fmt.Scanln(&role)
+	role = strings.ToLower(role)
+	if role == "abort" {
+		fmt.Println("Registration cancelled")
+		return nil
+	}
 
 	fmt.Print("Enter Employee ID (or 'abort' to cancel): ")
 	reader := bufio.NewReader(os.Stdin)
@@ -58,9 +66,9 @@ func registerEmployee(db *sql.DB) error {
 	}
 
 	_, err := db.Exec(`
-        INSERT INTO employees (id, first_name, last_name, date_added, password)
-        VALUES ($1, $2, $3, CURRENT_DATE, $4);
-    `, id, firstName, lastName, password)
+        INSERT INTO employees (id, first_name, last_name, date_added, password, role)
+        VALUES ($1, $2, $3, CURRENT_DATE, $4, $5);
+    `, id, firstName, lastName, password, role)
 
 	if err != nil {
 		return fmt.Errorf("failed to register employee: %v", err)

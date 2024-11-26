@@ -21,10 +21,8 @@ func menu() {
 			err := registerEmployee(db)
 			if err != nil {
 				fmt.Println(err)
-				log.Println(err)
-			} else {
-				fmt.Println("Employee registered successfully")
 			}
+
 		case 2:
 			err := deleteEmployee(db)
 			if err != nil {
