@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -23,7 +22,7 @@ func (api *API) handleGeofenceCheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("Received %s request from %s to %s?%s\n", r.Method, r.RemoteAddr, r.URL.Path, r.URL.Query())
+	log.Println("Received %s request from %s to %s?%s\n", r.Method, r.RemoteAddr, r.URL.Path, r.URL.Query())
 
 	lat := r.URL.Query().Get("lat")
 	lng := r.URL.Query().Get("lng")
