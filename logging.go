@@ -81,6 +81,21 @@ func initDB() {
 
 	log.Println("[DB] Login attempts table initialized")
 
+	_, err = db.Exec(`
+    CREATE TABLE IF NOT EXISTS attendance (
+        id SERIAL PRIMARY KEY,
+        employee_id VARCHAR(15) NOT NULL,
+        check_in_time TIMESTAMP NOT NULL,
+        log_out_time TIMESTAMP,
+        FOREIGN KEY (employee_id) REFERENCES employees(id)
+    );
+`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("[DB] Attendance table initialized")
+
 }
 
 func Logger(next http.HandlerFunc) http.HandlerFunc {

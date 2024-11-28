@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -49,19 +50,23 @@ func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if storedPassword != password {
-		http.Error(w, "false", http.StatusUnauthorized)
-		log.Println("Failed login attempt from", ipAddress)
-		// Log the failed login attempt
-		_, err = db.Exec(`
-			INSERT INTO login_attempts (timestamp, ip_address, employee_id, success)
-			VALUES ($1, $2, $3, $4);
-		`, time.Now(), ipAddress, employeeID, false)
+	if storedPassword == password {
+		_, err := db.Exec(`
+            INSERT INTO attendance (employee_id, check_in_time)
+            VALUES ($1, $2);
+        `, employeeID, time.Now())
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
+			http.Error(w, "Failed to check in employee", http.StatusInternalServerError)
+			return
 		}
-		return
+
+		log.Println("Check-in record inserted successfully")
+		response := fmt.Sprintf(role)
+		w.Write([]byte(response))
+
 	} else {
+
 		log.Printf("Successful login attempt from %s (employee ID: %s, role: %s)\n", ipAddress, employeeID, role)
 		// Log the successful login attempt
 		_, err = db.Exec(`

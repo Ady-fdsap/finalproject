@@ -10,6 +10,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+
 func registerEmployee(db *sql.DB) error {
 	var id, firstName, lastName, password, role string
 
