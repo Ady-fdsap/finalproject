@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -62,8 +61,7 @@ func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
 		}
 
 		log.Println("Check-in record inserted successfully")
-		response := fmt.Sprintf(role)
-		w.Write([]byte(response))
+		w.Write([]byte(role))
 
 	} else {
 

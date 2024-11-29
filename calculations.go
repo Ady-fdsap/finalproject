@@ -146,3 +146,23 @@ func (geofence *Geofence) Inside(point *geo.Point) bool {
 		return false
 	}
 }
+
+// password registration validation for capital letter
+func hasCapitalLetter(s string) bool {
+	for _, r := range s {
+		if r >= 'A' && r <= 'Z' {
+			return true
+		}
+	}
+	return false
+}
+
+// password registration validation for number
+func hasNumber(s string) bool {
+	for _, r := range s {
+		if r >= '0' && r <= '9' {
+			return true
+		}
+	}
+	return false
+}

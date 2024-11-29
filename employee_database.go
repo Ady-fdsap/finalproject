@@ -3,13 +3,15 @@ package main
 import (
 	"bufio"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strings"
 
 	_ "github.com/lib/pq"
 )
-
 
 func registerEmployee(db *sql.DB) error {
 	var id, firstName, lastName, password, role string
@@ -178,20 +180,88 @@ func displayEmployees(db *sql.DB) error {
 	return nil
 }
 
-func hasCapitalLetter(s string) bool {
-	for _, r := range s {
-		if r >= 'A' && r <= 'Z' {
-			return true
-		}
+func (api *API) handleGetEmployeeInfo(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
 	}
-	return false
+
+	// Check if the specific word is present in the request body
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		return
+	}
+	defer r.Body.Close()
+
+	if !strings.Contains(string(body), "strawberry shortcake") {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	if strings.Contains(r.URL.Path, "/info") {
+		// Retrieve all employee information from the database
+		rows, err := db.Query("SELECT id, role, last_name, first_name FROM employees")
+		if err != nil {
+			http.Error(w, "Failed to retrieve employee information", http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		var employees []Employee
+		for rows.Next() {
+			var employee Employee
+			err := rows.Scan(&employee.ID, &employee.Role, &employee.LastName, &employee.FirstName)
+			if err != nil {
+				http.Error(w, "Failed to scan employee row", http.StatusInternalServerError)
+				return
+			}
+			employees = append(employees, employee)
+		}
+
+		// Marshal the employee information to JSON
+		employeeInfo, err := json.Marshal(employees)
+		if err != nil {
+			http.Error(w, "Failed to marshal employee information", http.StatusInternalServerError)
+			return
+		}
+
+		w.Write(employeeInfo)
+	} else {
+		// Retrieve employee information based on the provided ID
+		employeeID := r.URL.Query().Get("id")
+		if employeeID == "" {
+			http.Error(w, "Invalid request", http.StatusBadRequest)
+			return
+		}
+
+		stmt, err := db.Prepare("SELECT id, role, last_name, first_name FROM employees WHERE id = $1")
+		if err != nil {
+			http.Error(w, "Failed to prepare query", http.StatusInternalServerError)
+			return
+		}
+		row := stmt.QueryRow(employeeID)
+		var employee Employee
+		err = row.Scan(&employee.ID, &employee.Role, &employee.LastName, &employee.FirstName)
+		if err != nil {
+			http.Error(w, "Failed to retrieve employee information", http.StatusInternalServerError)
+			return
+		}
+
+		// Marshal the employee information to JSON
+		employeeInfo, err := json.Marshal(employee)
+		if err != nil {
+			http.Error(w, "Failed to marshal employee information", http.StatusInternalServerError)
+			return
+		}
+
+		w.Write(employeeInfo)
+	}
 }
 
-func hasNumber(s string) bool {
-	for _, r := range s {
-		if r >= '0' && r <= '9' {
-			return true
-		}
-	}
-	return false
+type Employee struct {
+	ID        string `json:"id"`
+	Role      string `json:"role"`
+	LastName  string `json:"last_name"`
+	FirstName string `json:"first_name"`
 }

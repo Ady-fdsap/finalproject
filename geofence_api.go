@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bytes"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -57,6 +60,18 @@ func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodOptions {
 			log.Printf("[DEBUG] Request method: %s, URL: %s", r.Method, r.URL)
+			if r.ContentLength > 0 {
+				body, err := io.ReadAll(r.Body)
+				if err != nil {
+					log.Printf("[DEBUG] Error reading request body: %v", err)
+				} else {
+					log.Printf("[DEBUG] Request body: %s", string(body))
+					// Restore the request body so that the next handler can read it
+					r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+				}
+			} else {
+				log.Printf("[DEBUG] Request body: (empty)")
+			}
 		}
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
