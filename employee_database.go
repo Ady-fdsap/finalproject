@@ -181,82 +181,63 @@ func displayEmployees(db *sql.DB) error {
 }
 
 func (api *API) handleGetEmployeeInfo(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Check if the specific word is present in the request body
+	// Read the request body
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
 		return
 	}
-	defer r.Body.Close()
 
-	if !strings.Contains(string(body), "strawberry shortcake") {
+	// Parse the request body
+	var requestBody struct {
+		Keyword string `json:"keyword"`
+	}
+	err = json.Unmarshal(body, &requestBody)
+	if err != nil {
+		http.Error(w, "Failed to parse request body", http.StatusBadRequest)
+		return
+	}
+
+	// Check if the specific word is present in the request body
+	if !strings.Contains(requestBody.Keyword, "strawberry shortcake") {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
-	if strings.Contains(r.URL.Path, "/info") {
-		// Retrieve all employee information from the database
-		rows, err := db.Query("SELECT id, role, last_name, first_name FROM employees")
-		if err != nil {
-			http.Error(w, "Failed to retrieve employee information", http.StatusInternalServerError)
-			return
-		}
-		defer rows.Close()
-
-		var employees []Employee
-		for rows.Next() {
-			var employee Employee
-			err := rows.Scan(&employee.ID, &employee.Role, &employee.LastName, &employee.FirstName)
-			if err != nil {
-				http.Error(w, "Failed to scan employee row", http.StatusInternalServerError)
-				return
-			}
-			employees = append(employees, employee)
-		}
-
-		// Marshal the employee information to JSON
-		employeeInfo, err := json.Marshal(employees)
-		if err != nil {
-			http.Error(w, "Failed to marshal employee information", http.StatusInternalServerError)
-			return
-		}
-
-		w.Write(employeeInfo)
-	} else {
-		// Retrieve employee information based on the provided ID
-		employeeID := r.URL.Query().Get("id")
-		if employeeID == "" {
-			http.Error(w, "Invalid request", http.StatusBadRequest)
-			return
-		}
-
-		stmt, err := db.Prepare("SELECT id, role, last_name, first_name FROM employees WHERE id = $1")
-		if err != nil {
-			http.Error(w, "Failed to prepare query", http.StatusInternalServerError)
-			return
-		}
-		row := stmt.QueryRow(employeeID)
-		var employee Employee
-		err = row.Scan(&employee.ID, &employee.Role, &employee.LastName, &employee.FirstName)
-		if err != nil {
-			http.Error(w, "Failed to retrieve employee information", http.StatusInternalServerError)
-			return
-		}
-
-		// Marshal the employee information to JSON
-		employeeInfo, err := json.Marshal(employee)
-		if err != nil {
-			http.Error(w, "Failed to marshal employee information", http.StatusInternalServerError)
-			return
-		}
-
-		w.Write(employeeInfo)
+	// Retrieve all employee information from the database
+	rows, err := db.Query("SELECT id, role, last_name, first_name FROM employees")
+	if err != nil {
+		http.Error(w, "Failed to retrieve employee information", http.StatusInternalServerError)
+		return
 	}
+	defer rows.Close()
+
+	var employees []Employee
+	for rows.Next() {
+		var employee Employee
+		err := rows.Scan(&employee.ID, &employee.Role, &employee.LastName, &employee.FirstName)
+		if err != nil {
+			http.Error(w, "Failed to scan employee row", http.StatusInternalServerError)
+			return
+		}
+		employees = append(employees, employee)
+	}
+
+	// Marshal the employee information to JSON
+	employeeInfo, err := json.Marshal(employees)
+	if err != nil {
+		http.Error(w, "Failed to marshal employee information", http.StatusInternalServerError)
+		return
+	}
+
+	// Send the employee information as a response body
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(employeeInfo)
 }
 
 type Employee struct {
