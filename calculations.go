@@ -22,6 +22,7 @@ func getMin(slice []float64) float64 {
 	return min
 }
 
+// watermark ni ady
 func getMax(slice []float64) float64 {
 	var max float64
 	if len(slice) > 0 {
@@ -114,6 +115,7 @@ func (geofence *Geofence) Inside(point *geo.Point) bool {
 		return false
 	}
 
+	//watermark ni ady
 	tileHash := (project(point.Lng(), geofence.tileHeight)-geofence.minTileY)*float64(geofence.granularity) + (project(point.Lat(), geofence.tileWidth) - geofence.minTileX)
 	//fmt.Println("Tile hash:", tileHash)
 	intersects := geofence.tiles[tileHash]
