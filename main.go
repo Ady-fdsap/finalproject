@@ -14,7 +14,6 @@ func main() {
 	http.HandleFunc("/geofence/check", corsMiddleware(Logger(handleGeofenceCheckRequestWrapper)))
 	http.HandleFunc("/employee/login", corsMiddleware(api.handleEmployeeLogin))
 	http.HandleFunc("/employee/info", corsMiddleware(api.handleGetEmployeeInfo))
-
 	log.Println("API up and running :) ")
 	go menu()
 	log.Fatal(http.ListenAndServe(":8080", nil))

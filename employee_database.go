@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -188,31 +187,12 @@ func displayEmployees(db *sql.DB) error {
 }
 
 func (api *API) handleGetEmployeeInfo(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+
+	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Read the request body
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
-		return
-	}
-
-	// Parse the request body
-	var requestBody struct {
-		Keyword string `json:"keyword"`
-	}
-	err = json.Unmarshal(body, &requestBody)
-	if err != nil {
-		http.Error(w, "Failed to parse request body", http.StatusBadRequest)
-		return
-	}
-
-	// Check if the specific word is present in the request body
-	if !strings.Contains(requestBody.Keyword, "strawberry shortcake") {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
@@ -224,7 +204,7 @@ func (api *API) handleGetEmployeeInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var employees []Employee
+	// Stream the employee information to the response body
 	for rows.Next() {
 		var employee Employee
 		err := rows.Scan(&employee.ID, &employee.Role, &employee.LastName, &employee.FirstName)
@@ -232,19 +212,26 @@ func (api *API) handleGetEmployeeInfo(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Failed to scan employee row", http.StatusInternalServerError)
 			return
 		}
-		employees = append(employees, employee)
-	}
 
-	// Marshal the employee information to JSON
-	employeeInfo, err := json.Marshal(employees)
-	if err != nil {
-		http.Error(w, "Failed to marshal employee information", http.StatusInternalServerError)
-		return
-	}
+		// Marshal the employee information to JSON
+		employeeInfo, err := json.Marshal(employee)
+		if err != nil {
+			http.Error(w, "Failed to marshal employee information", http.StatusInternalServerError)
+			return
+		}
 
-	// Send the employee information as a response body
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(employeeInfo)
+		// Write the employee information to the response body
+		_, err = w.Write(append(employeeInfo, '\n'))
+		if err != nil {
+			http.Error(w, "Failed to write employee information", http.StatusInternalServerError)
+			return
+		}
+
+		// Flush the response body to the client
+		if fw, ok := w.(http.Flusher); ok {
+			fw.Flush()
+		}
+	}
 }
 
 type Employee struct {

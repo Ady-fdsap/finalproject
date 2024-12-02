@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -36,14 +37,14 @@ func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Query the database to check if the employee ID and password match
-	stmt, err := db.Prepare("SELECT password, role FROM employees WHERE id = $1")
+	stmt, err := db.Prepare("SELECT password, role, first_name, last_name FROM employees WHERE id = $1")
 	if err != nil {
 		http.Error(w, "failed to prepare query", http.StatusInternalServerError)
 		return
 	}
 
-	var storedPassword, role string
-	err = stmt.QueryRow(employeeID).Scan(&storedPassword, &role)
+	var storedPassword, role, firstName, lastName string
+	err = stmt.QueryRow(employeeID).Scan(&storedPassword, &role, &firstName, &lastName)
 	if err != nil {
 		http.Error(w, "failed to retrieve password", http.StatusInternalServerError)
 		return
@@ -61,21 +62,25 @@ func (api *API) handleEmployeeLogin(w http.ResponseWriter, r *http.Request) {
 		}
 
 		log.Println("Check-in record inserted successfully")
-		w.Write([]byte(role))
+		// Create a response string containing the role, first name, and last name
+		response := fmt.Sprintf("%s %s %s", role, firstName, lastName)
+		w.Write([]byte(response))
 
 	} else {
 
-		log.Printf("Successful login attempt from %s (employee ID: %s, role: %s)\n", ipAddress, employeeID, role)
+		log.Printf("Successful login attempt from %s (employee ID: %s, role: %s, first name: %s, last name: %s)\n", ipAddress, employeeID, role, firstName, lastName)
+
 		// Log the successful login attempt
 		_, err = db.Exec(`
-			INSERT INTO login_attempts (timestamp, ip_address, employee_id, success)
-			VALUES ($1, $2, $3, $4);
-		`, time.Now(), ipAddress, employeeID, true)
+        INSERT INTO login_attempts (timestamp, ip_address, employee_id, success)
+        VALUES ($1, $2, $3, $4);
+    `, time.Now(), ipAddress, employeeID, true)
 		if err != nil {
 			log.Fatal(err)
 		}
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(role))
+		response := fmt.Sprintf("%s %s %s", role, firstName, lastName)
+		w.Write([]byte(response))
 		return
 	}
+
 }
