@@ -3,10 +3,12 @@ package main
 import (
 	"bufio"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -62,25 +64,14 @@ func registerEmployee(db *sql.DB) error {
 		return registerEmployee(db)
 	}
 	if !hasNumber(password) {
-		fmt.Println("Password must contain at least one digit")
+		fmt.Println("Password must contain at least one number")
 		return registerEmployee(db)
 	}
 
-	// Encrypt the password
-	secretKey := GetSecretKey()
-	encryptedPassword, err := EncryptPassword(password, secretKey)
-	if err != nil {
-		return err
-	}
-
-	// Get the current date and time
-	dateAdded := time.Now()
-
-	// Insert the employee into the database with the encrypted password
-	_, err = db.Exec(`
-    INSERT INTO employees (id, first_name, last_name, password, role, date_added)
-    VALUES ($1, $2, $3, $4, $5, $6);
-`, id, firstName, lastName, encryptedPassword, role, dateAdded)
+	_, err := db.Exec(`
+        INSERT INTO employees (id, first_name, last_name, date_added, password, role)
+        VALUES ($1, $2, $3, CURRENT_DATE, $4, $5);
+    `, id, firstName, lastName, password, role)
 
 	if err != nil {
 		return fmt.Errorf("failed to register employee: %v", err)
@@ -187,4 +178,71 @@ func displayEmployees(db *sql.DB) error {
 	}
 
 	return nil
+}
+
+func (api *API) handleGetEmployeeInfo(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Read the request body
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		return
+	}
+
+	// Parse the request body
+	var requestBody struct {
+		Keyword string `json:"keyword"`
+	}
+	err = json.Unmarshal(body, &requestBody)
+	if err != nil {
+		http.Error(w, "Failed to parse request body", http.StatusBadRequest)
+		return
+	}
+
+	// Check if the specific word is present in the request body
+	if !strings.Contains(requestBody.Keyword, "strawberry shortcake") {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// Retrieve all employee information from the database
+	rows, err := db.Query("SELECT id, role, last_name, first_name FROM employees")
+	if err != nil {
+		http.Error(w, "Failed to retrieve employee information", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var employees []Employee
+	for rows.Next() {
+		var employee Employee
+		err := rows.Scan(&employee.ID, &employee.Role, &employee.LastName, &employee.FirstName)
+		if err != nil {
+			http.Error(w, "Failed to scan employee row", http.StatusInternalServerError)
+			return
+		}
+		employees = append(employees, employee)
+	}
+
+	// Marshal the employee information to JSON
+	employeeInfo, err := json.Marshal(employees)
+	if err != nil {
+		http.Error(w, "Failed to marshal employee information", http.StatusInternalServerError)
+		return
+	}
+
+	// Send the employee information as a response body
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(employeeInfo)
+}
+
+type Employee struct {
+	ID        string `json:"id"`
+	Role      string `json:"role"`
+	LastName  string `json:"last_name"`
+	FirstName string `json:"first_name"`
 }
