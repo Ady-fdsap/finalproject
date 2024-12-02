@@ -102,6 +102,7 @@ func vectorDifference(p1 *geo.Point, p2 *geo.Point) *geo.Point {
 	return geo.NewPoint(p1.Lat()-p2.Lat(), p1.Lng()-p2.Lng())
 }
 
+// sarap matulog gagi
 func vectorCrossProduct(p1 *geo.Point, p2 *geo.Point) float64 {
 	return p1.Lat()*p2.Lng() - p1.Lng()*p2.Lat()
 }

@@ -120,6 +120,8 @@ func Logger(next http.HandlerFunc) http.HandlerFunc {
 				http.Error(w, "Invalid latitude", http.StatusBadRequest)
 				return
 			}
+
+			// watermark ni ady
 			lngFloat, err := strconv.ParseFloat(lng, 64)
 			if err != nil {
 				http.Error(w, "Invalid longitude", http.StatusBadRequest)
