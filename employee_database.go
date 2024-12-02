@@ -54,6 +54,13 @@ func registerEmployee(db *sql.DB) error {
 		return nil
 	}
 
+	// Encrypt the password
+	secretKey := GetSecretKey()
+	encryptedPassword, err := EncryptPassword(password, secretKey)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt password: %v", err)
+	}
+
 	// Check if password meets requirements
 	if len(password) < 8 {
 		fmt.Println("Password must be at least 8 characters long")
@@ -68,10 +75,10 @@ func registerEmployee(db *sql.DB) error {
 		return registerEmployee(db)
 	}
 
-	_, err := db.Exec(`
-        INSERT INTO employees (id, first_name, last_name, date_added, password, role)
-        VALUES ($1, $2, $3, CURRENT_DATE, $4, $5);
-    `, id, firstName, lastName, password, role)
+	_, err = db.Exec(`
+    INSERT INTO employees (id, first_name, last_name, date_added, password, role)
+    VALUES ($1, $2, $3, CURRENT_DATE, $4, $5);
+`, id, firstName, lastName, encryptedPassword, role)
 
 	if err != nil {
 		return fmt.Errorf("failed to register employee: %v", err)
