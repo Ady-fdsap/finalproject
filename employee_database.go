@@ -106,6 +106,33 @@ func deleteEmployee(db *sql.DB) error {
 		return fmt.Errorf("failed to retrieve employee details: %v", err)
 	}
 
+	// Check if there are any attendance records associated with the employee
+	var attendanceCount int
+	err = db.QueryRow("SELECT COUNT(*) FROM attendance WHERE employee_id = $1", employeeID).Scan(&attendanceCount)
+	if err != nil {
+		return err
+	}
+
+	if attendanceCount > 0 {
+		// If there are attendance records, prompt the user to confirm deletion
+		fmt.Println("Warning: This employee has attendance records associated with them. Deleting this employee will also delete these records.")
+		fmt.Print("Are you sure you want to delete employee " + employeeID + " (" + firstName + " " + lastName + ")? (y/n): ")
+		var confirm string
+		fmt.Scanln(&confirm)
+
+		if strings.ToLower(confirm) != "y" {
+			fmt.Println("Deletion cancelled")
+			return nil
+		}
+
+		// Delete the attendance records
+		_, err = db.Exec("DELETE FROM attendance WHERE employee_id = $1", employeeID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Prompt the user to confirm deletion
 	fmt.Print("Are you sure you want to delete employee " + employeeID + " (" + firstName + " " + lastName + ")? (y/n): ")
 	var confirm string
 	fmt.Scanln(&confirm)
@@ -115,6 +142,7 @@ func deleteEmployee(db *sql.DB) error {
 		return nil
 	}
 
+	// Proceed with deleting the employee
 	result, err := db.Exec(`
 		DELETE FROM employees
 		WHERE id = $1;
