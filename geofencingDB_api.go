@@ -26,8 +26,8 @@ func createGeofenceDatabase(db *sql.DB) error {
 	_, err := db.Exec(`
         CREATE TABLE IF NOT EXISTS geofence_coordinates (
             id SERIAL PRIMARY KEY,
+			latitude FLOAT NOT NULL,
             longitude FLOAT NOT NULL,
-            latitude FLOAT NOT NULL
         );
     `)
 	return err
@@ -85,7 +85,7 @@ func handleGetCoordinates(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update the geofences
-	updateGeofences()
+	updateGeofences(db)
 	w.Write([]byte("Coordinates inserted successfully, updated the geofence"))
 	log.Println("Coordinates inserted successfully, updated the geofence")
 }

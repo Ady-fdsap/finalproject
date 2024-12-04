@@ -13,7 +13,8 @@ func menu() {
 		fmt.Println("1. Register Employee")
 		fmt.Println("2. Delete Employee")
 		fmt.Println("3. Display Employees")
-		fmt.Println("4. Exit")
+		fmt.Println("4. Update Geofences")
+		fmt.Println("5. Exit")
 		var choice int
 		fmt.Scanln(&choice)
 		switch choice {
@@ -38,6 +39,10 @@ func menu() {
 			}
 
 		case 4:
+			updateGeofences(db)
+			fmt.Println("Geofences updated successfully")
+
+		case 5:
 			fmt.Println("Exiting program")
 			os.Exit(0)
 

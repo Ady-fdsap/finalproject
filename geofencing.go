@@ -50,7 +50,7 @@ func getCoordinatesFromDB(db *sql.DB) ([]*geo.Point, error) {
 		if err != nil {
 			return nil, err
 		}
-		points = append(points, geo.NewPoint(latitude, longitude)) // swapped latitude and longitude
+		points = append(points, geo.NewPoint(latitude, longitude)) // correct order: latitude, longitude
 	}
 
 	return points, nil
@@ -145,18 +145,11 @@ func handleGeofenceCheckRequest(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("false"))
 }
 
-func updateGeofences() {
-    db, err := sql.Open("postgres", "user=ady dbname=Requests sslmode=disable")
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer db.Close()
+func updateGeofences(db *sql.DB) {
+	points, err := getCoordinatesFromDB(db)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    points, err := getCoordinatesFromDB(db)
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    Geofences["geofence1"] = NewGeofence("geofence1", [][]*geo.Point{points})
+	Geofences["geofence1"] = NewGeofence("geofence1", [][]*geo.Point{points})
 }
-
