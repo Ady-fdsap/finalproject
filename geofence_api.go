@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -67,7 +66,7 @@ func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 				} else {
 					log.Printf("[DEBUG] Request body: %s", string(body))
 					// Restore the request body so that the next handler can read it
-					r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+					r.Body = io.NopCloser(bytes.NewBuffer(body))
 				}
 			} else {
 				log.Printf("[DEBUG] Request body: (empty)")

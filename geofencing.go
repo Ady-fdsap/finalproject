@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -34,24 +36,64 @@ func (gm *GeofenceManager) GetGeofence(id string) *Geofence {
 	return gm.geofences[id]
 }
 
-var Geofences = map[string]*Geofence{
-	"geofence1": NewGeofence("geofence1", [][]*geo.Point{
-		{
-			geo.NewPoint(14.067694194798804, 121.32708640042505),
-			geo.NewPoint(14.06800445535538, 121.32742234709286),
-			geo.NewPoint(14.068129707532552, 121.32719002650704),
-			geo.NewPoint(14.06788253996273, 121.32688224303081),
-		},
-	}),
-	//"geofence2": NewGeofence("geofence2", [][]*geo.Point{
-	//	{
-	//		geo.NewPoint(14.067694194798804, 121.32708640042505),
-	//		geo.NewPoint(14.06800445535538, 121.32742234709286),
-	//		geo.NewPoint(14.068129707532552, 121.32719002650704),
-	//		geo.NewPoint(14.06788253996273, 121.32688224303081),
-	//	},
-	//}),
+func getCoordinatesFromDB(db *sql.DB) ([]*geo.Point, error) {
+	var points []*geo.Point
+	rows, err := db.Query("SELECT longitude, latitude FROM geofence_coordinates")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var longitude, latitude float64
+		err := rows.Scan(&longitude, &latitude)
+		if err != nil {
+			return nil, err
+		}
+		points = append(points, geo.NewPoint(latitude, longitude)) // swapped latitude and longitude
+	}
+
+	return points, nil
 }
+
+var Geofences = map[string]*Geofence{
+	"geofence1": func() *Geofence {
+		db, err := sql.Open("postgres", "user=ady dbname=Requests sslmode=disable")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer db.Close()
+
+		points, err := getCoordinatesFromDB(db)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		return NewGeofence("geofence1", [][]*geo.Point{points})
+	}(),
+}
+
+//hardcoded na geopoints para sa geofence
+//var Geofences = map[string]*Geofence{
+// "geofence1": NewGeofence("geofence1", [][]*geo.Point{
+// 	{
+// 		geo.NewPoint(14.067694194798804, 121.32708640042505),
+// 		geo.NewPoint(14.06800445535538, 121.32742234709286),
+// 		geo.NewPoint(14.068129707532552, 121.32719002650704),
+// 		geo.NewPoint(14.06788253996273, 121.32688224303081),
+// 	},
+// }),
+
+//di ito kasali
+//"geofence2": NewGeofence("geofence2", [][]*geo.Point{
+//	{
+//		geo.NewPoint(14.067694194798804, 121.32708640042505),
+//		geo.NewPoint(14.06800445535538, 121.32742234709286),
+//		geo.NewPoint(14.068129707532552, 121.32719002650704),
+//		geo.NewPoint(14.06788253996273, 121.32688224303081),
+//	},
+//}),
+//}
 
 func NewGeofence(id string, points [][]*geo.Point) *Geofence {
 	geofence := &Geofence{}
@@ -102,3 +144,19 @@ func handleGeofenceCheckRequest(w http.ResponseWriter, r *http.Request) {
 	// If the point is not inside any geofence, return false
 	w.Write([]byte("false"))
 }
+
+func updateGeofences() {
+    db, err := sql.Open("postgres", "user=ady dbname=Requests sslmode=disable")
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer db.Close()
+
+    points, err := getCoordinatesFromDB(db)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    Geofences["geofence1"] = NewGeofence("geofence1", [][]*geo.Point{points})
+}
+
