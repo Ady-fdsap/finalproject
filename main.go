@@ -26,6 +26,13 @@ func main() {
 	createGeofenceDatabase(db)
 
 	log.Println("API up and running :) ")
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		if err == http.ErrServerClosed {
+			log.Println("Server closed")
+		} else {
+			log.Fatal("Error starting server:", err)
+		}
+	}
 	//log.Println(" Created by Group 1, Batch 7 Interns 2024 :DD")
 	go menu()
 	log.Fatal(http.ListenAndServe(":8080", nil))
