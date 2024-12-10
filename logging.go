@@ -24,6 +24,7 @@ type RequestLog struct {
 func initDB() {
 	var err error
 	dbUrl := os.Getenv("DATABASE_URL")
+	dbUrl += "?sslmode=disable"
 	db, err := sql.Open("postgres", dbUrl)
 
 	if err != nil {
