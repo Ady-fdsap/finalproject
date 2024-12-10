@@ -14,6 +14,7 @@ func main() {
 	http.HandleFunc("/geofence/check", corsMiddleware(Logger(handleGeofenceCheckRequestWrapper)))
 	http.HandleFunc("/employee/login", corsMiddleware(api.handleEmployeeLogin))
 	http.HandleFunc("/employee/info", corsMiddleware(api.handleGetEmployeeInfo))
+	http.HandleFunc("/register-employee", api.handleRegisterEmployee)
 	http.HandleFunc("/coordinates", corsMiddleware(handleGetCoordinates))
 	createGeofenceDatabase(db)
 
