@@ -59,7 +59,7 @@ func handleGetCoordinates(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Connect to the database
-	db, err := sql.Open("postgres", "user=ady dbname=Requests sslmode=disable")
+	db, err = sql.Open("postgres", "postgresql://requests_0lsz_user:HD2YXsKbv57ceqtC1vCV920SLuH1D7E4@dpg-ct4h34lumphs73e62f1g-a.singapore-postgres.render.com/requests_0lsz")
 	if err != nil {
 		http.Error(w, "Failed to connect to database", http.StatusInternalServerError)
 		return
