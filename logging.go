@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -22,8 +23,8 @@ type RequestLog struct {
 
 func initDB() {
 	var err error
-	connStr := "postgresql://requests_0lsz_user:HD2YXsKbv57ceqtC1vCV920SLuH1D7E4@dpg-ct4h34lumphs73e62f1g-a.singapore-postgres.render.com/requests_0lsz"
-	db, err = sql.Open("postgres", connStr)
+	dbUrl := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("postgres", dbUrl)
 
 	if err != nil {
 		log.Fatal(err)
