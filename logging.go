@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -23,8 +22,7 @@ type RequestLog struct {
 
 func initDB() {
 	var err error
-	dbUrl := os.Getenv("DATABASE_URL")
-	dbUrl += "?sslmode=disable"
+	dbUrl := "postgresql://requests_0lsz_user:HD2YXsKbv57ceqtC1vCV920SLuH1D7E4@dpg-ct4h34lumphs73e62f1g-a/requests_0lsz?sslmode=disable"
 	db, err := sql.Open("postgres", dbUrl)
 
 	if err != nil {
