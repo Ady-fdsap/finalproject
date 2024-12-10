@@ -58,7 +58,7 @@ func getCoordinatesFromDB(db *sql.DB) ([]*geo.Point, error) {
 
 var Geofences = map[string]*Geofence{
 	"geofence1": func() *Geofence {
-		db, err := sql.Open("postgres", "user=ady dbname=Requests sslmode=disable")
+		db, err := sql.Open("postgres", "postgresql://requests_0lsz_user:HD2YXsKbv57ceqtC1vCV920SLuH1D7E4@dpg-ct4h34lumphs73e62f1g-a.singapore-postgres.render.com/requests_0lsz")
 		if err != nil {
 			log.Fatal(err)
 		}
