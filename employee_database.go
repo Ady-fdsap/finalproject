@@ -264,9 +264,9 @@ func (api *API) handleGetEmployeeInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 type Employee struct {
-	ID        string
-	FirstName string
-	LastName  string
-	Password  string
-	Role      string
+	ID        string `json:"ID"`
+	FirstName string `json:"FirstName"`
+	LastName  string `json:"LastName"`
+	Password  string `json:"Password"`
+	Role      string `json:"Role"`
 }

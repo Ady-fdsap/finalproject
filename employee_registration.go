@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/lib/pq"
 )
 
 func (api *API) handleRegisterEmployee(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +19,7 @@ func (api *API) handleRegisterEmployee(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate the employee data
-	if employee.ID == "" || employee.FirstName == "" || employee.LastName == "" || employee.Password == "" {
+	if employee.ID == "" || employee.FirstName == "" || employee.LastName == "" || employee.Password == "" || employee.Role == "" {
 		http.Error(w, "Missing required fields", http.StatusBadRequest)
 		return
 	}
@@ -37,57 +35,30 @@ func (api *API) handleRegisterEmployee(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if password meets length requirements
 	if len(employee.Password) < 8 {
 		http.Error(w, "Password must be at least 8 characters long", http.StatusBadRequest)
 		return
 	}
 
-	// Register the employee
-	err = api.registerEmployeeAPI(employee)
-	if err != nil {
-		http.Error(w, "Failed to register employee", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusCreated)
-}
-
-func (api *API) registerEmployeeAPI(employee Employee) error {
-	// Check if the ID already exists
-	var count int
-	err := api.database.QueryRow(`
-        SELECT COUNT(*) FROM employees WHERE id = $1
-    `, employee.ID).Scan(&count)
-
-	if err != nil {
-		return fmt.Errorf("failed to check existing ID: %v", err.Error())
-	}
-
-	if count > 0 {
-		return fmt.Errorf("employee with ID %v already exists", employee.ID)
-	}
-
 	// Encrypt the password
-	log.Println("Executing SQL query to insert employee")
 	secretKey := GetSecretKey()
 	encryptedPassword, err := EncryptPassword(employee.Password, secretKey)
 	if err != nil {
-		return fmt.Errorf("failed to encrypt password: %v", err.Error())
+		http.Error(w, "Failed to encrypt password", http.StatusBadRequest)
+		return
 	}
 
 	// Insert the employee into the database
 	_, err = api.database.Exec(`
-        INSERT INTO employees (id, first_name, last_name, date_added, password, role)
-        VALUES ($1, $2, $3, CURRENT_DATE, $4, $5);
-    `, employee.ID, employee.FirstName, employee.LastName, encryptedPassword, employee.Role)
+    INSERT INTO employees (id, first_name, last_name, date_added, password, role)
+    VALUES ($1, $2, $3, CURRENT_DATE, $4, $5);
+`, employee.ID, employee.FirstName, employee.LastName, encryptedPassword, employee.Role)
 
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			return pqErr
-		}
-		return err
+		log.Println(err) // Print the error
+		http.Error(w, "Failed to insert employee", http.StatusInternalServerError)
+		return
 	}
 
-	return nil
+	fmt.Fprintf(w, "Employee registered successfully")
 }
