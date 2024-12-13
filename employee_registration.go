@@ -3,25 +3,31 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 )
 
 func (api *API) handleRegisterEmployee(w http.ResponseWriter, r *http.Request) {
-	// Get the request body
-	var employee Employee
-	err := json.NewDecoder(r.Body).Decode(&employee)
-	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	// Get the query parameters
+	id := r.URL.Query().Get("id")
+	firstName := r.URL.Query().Get("first_name")
+	lastName := r.URL.Query().Get("last_name")
+	password := r.URL.Query().Get("password")
+	role := r.URL.Query().Get("role")
+
+	// Validate the employee data
+	if id == "" || firstName == "" || lastName == "" || password == "" || role == "" {
+		http.Error(w, "Missing required fields", http.StatusBadRequest)
 		return
 	}
 
-	// Validate the employee data
-	if employee.ID == "" || employee.FirstName == "" || employee.LastName == "" || employee.Password == "" || employee.Role == "" {
-		http.Error(w, "Missing required fields", http.StatusBadRequest)
-		return
+	employee := Employee{
+		ID:        id,
+		FirstName: firstName,
+		LastName:  lastName,
+		Password:  password,
+		Role:      role,
 	}
 
 	// Validate the password
