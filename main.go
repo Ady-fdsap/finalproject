@@ -23,7 +23,8 @@ func main() {
 	http.HandleFunc("/employee/info", corsMiddleware(api.handleGetEmployeeInfo))
 	http.HandleFunc("/register", corsMiddleware(api.handleRegisterEmployee))
 	http.HandleFunc("/coordinates", corsMiddleware(handleGetCoordinates))
-	createGeofenceDatabase(db)
+	createGeofenceDatabase(db) 
+	
 
 	log.Println("API up and running :) ")
 	go func() {

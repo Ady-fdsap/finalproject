@@ -73,27 +73,11 @@ var Geofences = map[string]*Geofence{
 	}(),
 }
 
-//hardcoded na geopoints para sa geofence
-//var Geofences = map[string]*Geofence{
-// "geofence1": NewGeofence("geofence1", [][]*geo.Point{
-// 	{
-// 		geo.NewPoint(14.067694194798804, 121.32708640042505),
-// 		geo.NewPoint(14.06800445535538, 121.32742234709286),
-// 		geo.NewPoint(14.068129707532552, 121.32719002650704),
-// 		geo.NewPoint(14.06788253996273, 121.32688224303081),
-// 	},
-// }),
-
-//di ito kasali
-//"geofence2": NewGeofence("geofence2", [][]*geo.Point{
-//	{
+//geofence points:
 //		geo.NewPoint(14.067694194798804, 121.32708640042505),
 //		geo.NewPoint(14.06800445535538, 121.32742234709286),
 //		geo.NewPoint(14.068129707532552, 121.32719002650704),
 //		geo.NewPoint(14.06788253996273, 121.32688224303081),
-//	},
-//}),
-//}
 
 func NewGeofence(id string, points [][]*geo.Point) *Geofence {
 	geofence := &Geofence{}
